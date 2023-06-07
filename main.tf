@@ -133,13 +133,14 @@ resource "openstack_networking_secgroup_rule_v2" "sr_dns2" {
 }
 
 resource "openstack_networking_floatingip_v2" "consul_flip" {
-  pool = "ext01"
+  count = var.config.server_replicas
+  pool  = "ext01"
 }
 
 resource "openstack_compute_floatingip_associate_v2" "consul_flip" {
-  count       = var.config.server_replicas
-  floating_ip = "${openstack_networking_floatingip_v2.consul_flip.address}"
-  instance_id = "${openstack_compute_instance_v2.consul[count.index].id}"
+   count       = var.config.server_replicas
+   floating_ip = "${element(openstack_networking_floatingip_v2.consul_flip.*.address, count.index)}"
+   instance_id = "${element(openstack_compute_instance_v2.consul.*.id, count.index)}"
 }
 
 resource "openstack_compute_instance_v2" "consul" {
@@ -204,7 +205,7 @@ resource "openstack_compute_instance_v2" "consul" {
 
    provisioner "file" {
         content = templatefile("${path.module}/templates/consul.service.tpl", {
-            floatingip = "${openstack_networking_floatingip_v2.consul_flip.address}",
+            floatingip = "${element(openstack_networking_floatingip_v2.consul_flip.*.address, count.index)}",
         })
         destination = "/etc/systemd/system/consul.service" 
    }
