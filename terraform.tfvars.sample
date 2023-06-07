@@ -9,7 +9,6 @@ config = {
   flavor_name     = "SCS-2V:2:20"
   image_version   = "2023051901"
   instance_network_uuid = "mynetworkid"
-  instance_backnet_uuid = "mybacknetworkid"
   bastionhost     = "mybastionhostip"
   dns_servers     = ["dnsip1", "dnsip2"]
   keypair         = "/pathtomykeypair/ssh.pub"
