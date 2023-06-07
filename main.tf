@@ -153,9 +153,9 @@ resource "openstack_compute_instance_v2" "consul" {
     group = openstack_compute_servergroup_v2.consulcluster.id
   }
 
-  network {
-    uuid = var.config.instance_backnet_uuid
-  }
+#  network {
+#    uuid = var.config.instance_backnet_uuid
+#  }
 
   network {
     uuid = var.config.instance_network_uuid
