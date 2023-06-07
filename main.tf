@@ -4,7 +4,7 @@ locals {
 
 variable "auth_url" {
   type    = string
-  default = "https://api.gx-scs.sovereignit.cloud:5000" 
+  default = "https://myauthurl5000" 
 }
 
 variable "user_name" {
@@ -16,6 +16,22 @@ variable "password" {
   type    = string
   default = "totalgeheim" 
 }
+
+variable "tenant_name" {
+  type    = string
+  default = "myproject"
+}
+
+variable "user_domain_name" {
+  type    = string
+  default = "mydomain"
+}
+
+variable "region" {
+  type   = string
+  default = "myregion"
+}
+
 
 resource "random_uuid" "master_token" {}
 
@@ -193,6 +209,7 @@ resource "openstack_compute_instance_v2" "consul" {
             auth_url = "${var.auth_url}",
             user_name = "${var.user_name}",
             password = "${var.password}",
+            os_region   = "${var.config.os_region}",
             master_token = random_uuid.master_token.result,
         })
         destination = "/etc/consul/consul.hcl"
