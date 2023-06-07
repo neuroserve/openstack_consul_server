@@ -4,19 +4,20 @@
     node_name  = "${node_name}"
     server     =  true
     bootstrap_expect = ${bootstrap_expect}
-    retry_join = ["provider=os tag_key=consul-role tag_value=server auth_url=${auth_url} user_name=${user_name} domain_name=${os_domain_name} password=\"${password}\""] 
+    retry_join = ["provider=os tag_key=consul-role tag_value=server auth_url=${auth_url} user_name=${user_name} domain_name=${os_domain_name} password=\"${password}\" region=${os_region}"] 
     ports { 
-        http = -1
-        https = 8501 
+        http      = -1
+        https     = 8501
+        grpc      = 8502
+        grpc_tls  = 8503
     }
     ui_config {
         enabled = true
     }
-    encrypt     = "${encryption_key}"
-    bind_addr   = "{{ GetInterfaceIP \"ens3\" }}"
-    client_addr = "{{ GetInterfaceIP \"ens3\" }}"
-    serf_lan    = "{{ GetInterfaceIP \"ens3\" }}"
-    serf_wan    = "{{ GetInterfaceIP \"ens4\" }}"
+    encrypt        = "${encryption_key}"
+    bind_addr      = "0.0.0.0"
+    advertise_addr = "{{ GetInterfaceIP \"ens3\" }}"
+    client_addr    = "0.0.0.0"
     alt_domain  = "${domain_name}"
     dns_config {
         enable_truncate = true
@@ -36,4 +37,7 @@
         tokens {
            master = "${master_token}"
         }
+    }
+    connect {
+      enabled = true
     }
