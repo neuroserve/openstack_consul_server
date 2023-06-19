@@ -1,5 +1,6 @@
 locals {
     consul_version="1.15.2"
+    envoy_version="1.25.6"
 }
 
 variable "auth_url" {
@@ -132,6 +133,76 @@ resource "openstack_networking_secgroup_rule_v2" "sr_dns2" {
   security_group_id = openstack_networking_secgroup_v2.sg_consul.id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "sr_8300tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8300
+  port_range_max    = 8300
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8302tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8302
+  port_range_max    = 8302
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8302udp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 8302
+  port_range_max    = 8302
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8600tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8600
+  port_range_max    = 8600
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8600udp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 8600
+  port_range_max    = 8600
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8500tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8500
+  port_range_max    = 8500
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8501tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8501
+  port_range_max    = 8501
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
 resource "openstack_networking_floatingip_v2" "consul_flip" {
   count = var.config.server_replicas
   pool  = "ext01"
@@ -217,7 +288,8 @@ resource "openstack_compute_instance_v2" "consul" {
             os_domain_name = var.config.os_domain_name,
             node_name = "consul-${count.index}",
             bootstrap_expect = var.config.server_replicas,
-            encryption_key = random_id.encryption_key.b64_std,
+            encryption_key = "8Dhfvwwa2R7YdECm63tQUsIzt/lQZMHtDX0V8R37vsU=",
+#           encryption_key = random_id.encryption_key.b64_std,
             upstream_dns_servers = var.config.dns_servers,
             auth_url = "${var.auth_url}",
             user_name = "${var.user_name}",
@@ -226,6 +298,13 @@ resource "openstack_compute_instance_v2" "consul" {
             master_token = random_uuid.master_token.result,
         })
         destination = "/etc/consul/consul.hcl"
+   }
+   provisioner "remote-exec" {
+        inline = [
+            "curl -L https://func-e.io/install.sh | bash -s -- -b /usr/local/bin",
+            "export ENVOY_VERSION_STRING=${local.envoy_version} ; func-e use $ENVOY_VERSION_STRING",
+            "cp /root/.func-e/versions/${local.envoy_version}/bin/envoy /usr/local/bin",
+        ]
    }
 
    provisioner "remote-exec" {
