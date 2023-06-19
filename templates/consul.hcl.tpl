@@ -1,4 +1,5 @@
     datacenter = "${datacenter_name}"
+#   primary_datacenter = "${datacenter_name}"
     data_dir   = "/opt/consul"
     log_level  = "INFO"
     node_name  = "${node_name}"
@@ -18,6 +19,8 @@
     bind_addr      = "0.0.0.0"
     advertise_addr = "{{ GetInterfaceIP \"ens3\" }}"
     client_addr    = "0.0.0.0"
+    
+    translate_wan_addrs = true
     alt_domain  = "${domain_name}"
     dns_config {
         enable_truncate = true
@@ -34,10 +37,14 @@
         enabled = false
         default_policy = "deny"
         enable_token_persistence = true
+#       enable_token_replication = true
+        down_policy = "extend-cache"
         tokens {
            master = "${master_token}"
         }
     }
+#   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]
     connect {
       enabled = true
+      enable_mesh_gateway_wan_federation = true
     }
