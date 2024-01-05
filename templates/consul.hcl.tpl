@@ -46,5 +46,5 @@
 #   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]
     connect {
       enabled = true
-      enable_mesh_gateway_wan_federation = true
+#     enable_mesh_gateway_wan_federation = true
     }

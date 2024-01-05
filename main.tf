@@ -1,5 +1,5 @@
 locals {
-    consul_version="1.15.2"
+    consul_version="1.16.0"
     envoy_version="1.25.6"
 }
 
@@ -89,7 +89,7 @@ resource "random_id" "encryption_key" {
 
 data "openstack_images_image_v2" "os" {
   name        = "debian-11-consul"
-  visibility = "private"
+  visibility  = "private"
   most_recent = "true"
 }
 
@@ -265,6 +265,11 @@ resource "openstack_compute_instance_v2" "consul" {
    }
 
    provisioner "file" {
+        content = file("${path.module}/files/consul-tls.env")
+        destination = "/root/consul-tls.env"
+   }
+
+   provisioner "file" {
         content = tls_locally_signed_cert.consul[count.index].cert_pem
         destination = "/etc/consul/certificates/cert.pem"
    }
@@ -288,8 +293,8 @@ resource "openstack_compute_instance_v2" "consul" {
             os_domain_name = var.config.os_domain_name,
             node_name = "consul-${count.index}",
             bootstrap_expect = var.config.server_replicas,
-            encryption_key = "8Dhfvwwa2R7YdECm63tQUsIzt/lQZMHtDX0V8R37vsU=",
 #           encryption_key = random_id.encryption_key.b64_std,
+            encryption_key = var.config.consul_encryption_key,            
             upstream_dns_servers = var.config.dns_servers,
             auth_url = "${var.auth_url}",
             user_name = "${var.user_name}",
