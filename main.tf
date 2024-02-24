@@ -1,6 +1,6 @@
 locals {
-    consul_version="1.16.0"
-    envoy_version="1.25.6"
+    consul_version="1.17.3"
+    envoy_version="1.27.2"
 }
 
 variable "auth_url" {
@@ -56,6 +56,7 @@ resource "tls_cert_request" "consul" {
         "consul.local",
         "server.${var.config.datacenter_name}.consul",
         "consul.service.${var.config.domain_name}",
+        "consul-${count.index}.server.${var.config.domain_name}.consul",
     ]
 
     subject {
@@ -143,6 +144,26 @@ resource "openstack_networking_secgroup_rule_v2" "sr_8300tcp" {
   security_group_id = openstack_networking_secgroup_v2.sg_consul.id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "sr_8301tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8301
+  port_range_max    = 8301
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8301udp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 8301
+  port_range_max    = 8301
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
 resource "openstack_networking_secgroup_rule_v2" "sr_8302tcp" {
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -203,6 +224,27 @@ resource "openstack_networking_secgroup_rule_v2" "sr_8501tcp" {
   security_group_id = openstack_networking_secgroup_v2.sg_consul.id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "sr_8502tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8502
+  port_range_max    = 8502
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "sr_8503tcp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 8503
+  port_range_max    = 8503
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.sg_consul.id
+}
+
+
 resource "openstack_networking_floatingip_v2" "consul_flip" {
   count = var.config.server_replicas
   pool  = "ext01"
@@ -220,7 +262,7 @@ resource "openstack_compute_instance_v2" "consul" {
   flavor_name     = var.config.flavor_name
   key_pair        = openstack_compute_keypair_v2.user_keypair.name
   count           = var.config.server_replicas
-  security_groups = ["sg_consul", "default"]   
+  security_groups = ["sg_consul"]   
   scheduler_hints {
     group = openstack_compute_servergroup_v2.consulcluster.id
   }
@@ -235,6 +277,7 @@ resource "openstack_compute_instance_v2" "consul" {
   
   metadata = {
      consul-role = "server"
+     public-ipv4 = "${element(openstack_networking_floatingip_v2.consul_flip.*.address, count.index)}"
   }
 
   connection {
@@ -253,6 +296,7 @@ resource "openstack_compute_instance_v2" "consul" {
             "sudo apt-get update",
             "sudo mkdir -p /etc/consul/certificates",
             "sudo mkdir -p /opt/consul",
+            "sudo mkdir -p /etc/consul/policies",
             "sudo useradd -d /opt/consul consul",
             "sudo chown consul /opt/consul",
             "sudo chgrp consul /opt/consul",
@@ -262,11 +306,6 @@ resource "openstack_compute_instance_v2" "consul" {
    provisioner "file" {
         content = file("${var.config.certificate_pem}")
         destination = "/etc/consul/certificates/ca.pem"
-   }
-
-   provisioner "file" {
-        content = file("${path.module}/files/consul-tls.env")
-        destination = "/root/consul-tls.env"
    }
 
    provisioner "file" {
@@ -287,6 +326,45 @@ resource "openstack_compute_instance_v2" "consul" {
    }
 
    provisioner "file" {
+        content = templatefile("${path.module}/templates/consul-tls.env.tpl", {
+            consul_ip = self.access_ip_v4,
+        }) 
+        destination = "/root/consul-tls.env"
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/anonymous-policy.hcl"
+        destination = "/etc/consul/policies/anonymous-policy.hcl" 
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/policies-tokens.sh"
+        destination = "/etc/consul/policies/policies-tokens.sh"
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/consul-policy-nomad-agents.hcl"
+        destination = "/etc/consul/policies/consul-policy-nomad-agents.hcl"
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/meshgateway-policy.hcl"
+        destination = "/etc/consul/policies/meshgateway-policy.hcl"
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/replication-policy.hcl"
+        destination = "/etc/consul/policies/replication-policy.hcl"
+   }
+
+   provisioner "remote-exec" {
+        inline = [
+            "sudo apt-get update",
+            "sudo apt-get install -y tmux telnet dnsutils",
+        ]
+   }
+
+   provisioner "file" {
         content = templatefile("${path.module}/templates/consul.hcl.tpl", {
             datacenter_name = var.config.datacenter_name,
             domain_name = var.config.domain_name,
@@ -301,6 +379,7 @@ resource "openstack_compute_instance_v2" "consul" {
             password = "${var.password}",
             os_region   = "${var.config.os_region}",
             master_token = random_uuid.master_token.result,
+            floatingip = "${element(openstack_networking_floatingip_v2.consul_flip.*.address, count.index)}",
         })
         destination = "/etc/consul/consul.hcl"
    }

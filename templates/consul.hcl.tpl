@@ -16,11 +16,13 @@
         enabled = true
     }
     encrypt        = "${encryption_key}"
+
     bind_addr      = "0.0.0.0"
     advertise_addr = "{{ GetInterfaceIP \"ens3\" }}"
+    advertise_addr_wan = "${floatingip}"    
     client_addr    = "0.0.0.0"
-    
     translate_wan_addrs = true
+
     alt_domain  = "${domain_name}"
     dns_config {
         enable_truncate = true
@@ -32,19 +34,42 @@
     key_file  = "/etc/consul/certificates/private_key.pem"
     verify_incoming = false
     verify_outgoing = false
-    verify_server_hostname = true
+    verify_server_hostname = false
     acl {
         enabled = false
-        default_policy = "deny"
-        enable_token_persistence = true
+        default_policy = "allow"
+#       enable_token_persistence = true
 #       enable_token_replication = true
         down_policy = "extend-cache"
         tokens {
-           master = "${master_token}"
+#          master = "${master_token}"
+#          agent  = "${master_token}"
+#          replication = "${master_token}"
         }
     }
 #   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]
-    connect {
-      enabled = true
+
+#   connect {
+#     enabled = true
 #     enable_mesh_gateway_wan_federation = true
+#   }
+
+#    config_entries {
+#      bootstrap = [
+#        {
+#          kind = "proxy-defaults"
+#          name = "global"
+#          config {
+#            protocol                   = "http"
+#            envoy_prometheus_bind_addr = "0.0.0.0:9102"
+#          }
+#          mesh_gateway = {
+#          mode = "local"
+#          }
+#        }
+#      ]
+#    } 
+
+    performance {
+      raft_multiplier = 1
     }
