@@ -61,6 +61,10 @@ resource "tls_cert_request" "consul" {
         "127.0.0.1",
     ]
 
+    ip_addresses = [
+        "127.0.0.1",
+    ]
+
     subject {
         common_name = "server.${var.config.datacenter_name}.consul"
         organization = var.config.organization.name
