@@ -10,5 +10,10 @@ service_prefix "" {
   policy = "write"
 }
 
+key_prefix "" {
+  policy = "read"
+}
+
 acl = "write"
+mesh = "write"
 

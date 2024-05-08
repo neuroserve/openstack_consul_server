@@ -57,6 +57,8 @@ resource "tls_cert_request" "consul" {
         "server.${var.config.datacenter_name}.consul",
         "consul.service.${var.config.domain_name}",
         "consul-${count.index}.server.${var.config.domain_name}.consul",
+        "localhost",
+        "127.0.0.1",
     ]
 
     subject {
@@ -343,8 +345,8 @@ resource "openstack_compute_instance_v2" "consul" {
    }
 
    provisioner "file" {
-        source = "${path.root}/files/consul-policy-nomad-agents.hcl"
-        destination = "/etc/consul/policies/consul-policy-nomad-agents.hcl"
+        source = "${path.root}/files/nomad-client-policy.hcl"
+        destination = "/etc/consul/policies/nomad-client-policy.hcl"
    }
 
    provisioner "file" {
