@@ -9,6 +9,9 @@ consul acl policy create -name "meshgateway" -description "Policy for mesh gatew
 consul acl token create -node-identity="consul-gateway-0:prod2"
 consul acl token create -description "meshgateway:prod2" -policy-name=meshgateway 
 
+consul acl token create -description "dns-token" -templated-policy "builtin/dns"
+
+
 consul acl policy create -name "nomad-client" -description "Policy for nomad clients" -rules @policies/nomad-client-policy.hcl
 consul acl token create -description "nomad client token" -policy-name "nomad-client"
 
