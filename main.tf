@@ -363,20 +363,10 @@ resource "openstack_compute_instance_v2" "consul" {
         destination = "/etc/consul/policies/replication-policy.hcl"
    }
 
-   provisioner "file" {
-        source = "${path.root}/files/10-consul.dnsmasq"
-        destination = "/etc/dnsmasq.d/10-consul"
-   }
-
-   provisioner "file" {
-        source = "${path.root}/files/dnsmasq.conf"
-        destination = "/etc/dnsmasq.conf"
-   }
-
    provisioner "remote-exec" {
         inline = [
             "sudo apt-get update",
-            "sudo apt-get install -y tmux telnet dnsutils dnsmasq",
+            "sudo apt-get install -y tmux telnet dnsutils",
         ]
    }
 
@@ -421,15 +411,29 @@ resource "openstack_compute_instance_v2" "consul" {
 
    provisioner "remote-exec" {
          inline = [
-             "sudo apt-get install -y dnsmasq",
+             "sudo apt-get install -y -f dnsmasq",
              "sudo systemctl disable systemd-resolved",
              "sudo systemctl stop systemd-resolved",
+         ]
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/10-consul.dnsmasq"
+        destination = "/etc/dnsmasq.d/10-consul"
+   }
+
+   provisioner "file" {
+        source = "${path.root}/files/dnsmasq.conf"
+        destination = "/etc/dnsmasq.conf"
+   }
+
+   provisioner "remote-exec" {
+         inline = [
              "sudo systemctl enable dnsmasq",
              "sudo systemctl start dnsmasq",
              "sudo systemctl daemon-reload",
          ]
    }
-
 }
 
 resource "openstack_compute_servergroup_v2" "consulcluster" {
