@@ -354,6 +354,11 @@ resource "openstack_compute_instance_v2" "consul" {
    }
 
    provisioner "file" {
+        source = "${path.root}/files/nomad-server-policy.hcl"
+        destination = "/etc/consul/policies/nomad-server-policy.hcl"
+   }
+
+   provisioner "file" {
         source = "${path.root}/files/meshgateway-policy.hcl"
         destination = "/etc/consul/policies/meshgateway-policy.hcl"
    }
