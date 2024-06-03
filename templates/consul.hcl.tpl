@@ -1,5 +1,5 @@
     datacenter = "${datacenter_name}"
-#   primary_datacenter = "${datacenter_name}"
+#   primary_datacenter = "${datacenter_name}" # is needed on primaries _and_ secondaries
     data_dir   = "/opt/consul"
     log_level  = "INFO"
     node_name  = "${node_name}"
@@ -36,25 +36,25 @@
     verify_outgoing = false
     verify_server_hostname = false
     acl {
-        enabled = false
-        default_policy = "allow"
-#       enable_token_persistence = true
-#       enable_token_replication = true
+        enabled = false                   # enable in order to activate acls
+        default_policy = "allow"          # keep on "allow" first - change to "deny" after setting up acls and replication successfully
+#       enable_token_persistence = true   # persists tokens to disk
+#       enable_token_replication = true   # is only needed on primary
         down_policy = "extend-cache"
         tokens {
 #          master = "${master_token}"
 #          agent  = "${master_token}"
-#          replication = "${master_token}"
+#          replication = "${master_token}" # is only needed on secondaries
         }
     }
-#   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]
+#   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]   # enable after acl replication is working
 
-#   connect {
-#     enabled = true
-#     enable_mesh_gateway_wan_federation = true
+#   connect {                                                                       # enable after acl replication is working
+#     enabled = true                                                                # 
+#     enable_mesh_gateway_wan_federation = true                                     # don't forget the config_entries below 
 #   }
 
-#    config_entries {
+#    config_entries {                                                               # enable when activating connect
 #      bootstrap = [
 #        {
 #          kind = "proxy-defaults"
