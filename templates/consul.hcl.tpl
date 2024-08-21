@@ -39,7 +39,7 @@
         enabled = false                   # enable in order to activate acls
         default_policy = "allow"          # keep on "allow" first - change to "deny" after setting up acls and replication successfully
 #       enable_token_persistence = true   # persists tokens to disk
-#       enable_token_replication = true   # is only needed on primary
+#       enable_token_replication = true   # is needed on primary and secondary for cross-replication
         down_policy = "extend-cache"
         tokens {
 #          master = "${master_token}"
@@ -47,7 +47,7 @@
 #          replication = "${master_token}" # is only needed on secondaries
         }
     }
-#   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]   # enable after acl replication is working
+#   primary_gateways = [ "<primary-mesh-gateway-ip>:<primary-mesh-gateway-port>"]   # enable on the secondary after acl replication is working - using primaries mesh-gateway-ips
 
 #   connect {                                                                       # enable after acl replication is working
 #     enabled = true                                                                # 

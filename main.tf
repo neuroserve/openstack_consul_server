@@ -1,5 +1,5 @@
 locals {
-    consul_version="1.17.3"
+    consul_version="1.19.1"
     envoy_version="1.27.2"
 }
 
@@ -284,6 +284,7 @@ resource "openstack_compute_instance_v2" "consul" {
   metadata = {
      consul-role = "server"
      public-ipv4 = "${element(openstack_networking_floatingip_v2.consul_flip.*.address, count.index)}"
+     ps_restart_after_maint = "true"
   }
 
   connection {
@@ -444,7 +445,7 @@ resource "openstack_compute_instance_v2" "consul" {
 
 resource "openstack_compute_servergroup_v2" "consulcluster" {
   name = "aaf-sg"
-  policies = ["anti-affinity"]
+  policies = ["soft-anti-affinity"]
 }
 
 output "master_token" {
